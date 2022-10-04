@@ -2,6 +2,7 @@
     "cSpell.words": [
         "Automator",
         "automators",
+        "expressjwt",
         "menti",
         "typeform"
     ],
@@ -17,5 +18,6 @@
         "**/.settings": true,
         "**/node_modules": true,
         "**/spa/": true
-    }
+    },
+    "cSpell.language": "en,es-ES"
 }
