@@ -1,0 +1,12 @@
+{
+    "carlos@connecting-company-user": {
+        "password": "sha1$5f8d240e$1$810cd816bc6bcbc703b8cb897672c973002618d8",
+        "pointOfSaleFriendlyName": "Tiendita doña juana",
+        "wispHub": {
+            "username": "carlos@connecting-company",
+            "password": "carloscarlos123",
+            "deviceId": 927,
+            "pointOfSaleName": "3BD.02"
+        }
+    }
+}

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Hello, world!</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="" />
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="./jwt-decode.js"></script>
+    <!-- Google Fonts -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic"
+    />
+
+    <!-- CSS Reset -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css"
+    />
+
+    <!-- Milligram CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css"
+    />
+
+    <link rel="stylesheet" href="./navbar.css" />
+
+    <!-- You should properly set the path from the main file. -->
+  </head>
+  <body>
+    <div id="app">
+      <div v-if="this.creatingAccessCode === true" class="loading-block">
+        <div class="img-container">
+          <p>Creado ficha...</p>
+          <img src="/pepe-dance-pepe-ru.gif" />
+        </div>
+      </div>
+      <div class="navbar">
+        <ul>
+          <div class="container">
+            <li class="logo"><img src="/logo_thumbnail.png" /></li>
+            <li v-if="!this.state.userJWT">
+              <a
+                v-bind:class="{ active: this.state.currentPage == this._pages.LOGIN}"
+                @click="changePage(this._pages.LOGIN)"
+                href="#"
+                >Iniciar sesión</a
+              >
+            </li>
+            <li v-if="this.state.userJWT">
+              <a
+                v-bind:class="{ active: this.state.currentPage == this._pages.CREATE_ACCESS_CODE}"
+                @click="changePage(this._pages.CREATE_ACCESS_CODE)"
+                href="#"
+                >Crear Ficha</a
+              >
+            </li>
+            <li v-if="this.state.userJWT">
+              <a
+                v-bind:class="{ active: this.state.currentPage == this._pages.ACCESS_CODE_TABLE}"
+                @click="changePage(this._pages.ACCESS_CODE_TABLE)"
+                href="#"
+                >Fichas creadas</a
+              >
+            </li>
+            <li v-if="this.state.userJWT">
+              <a @click="logout()" href="#">↪</a>
+            </li>
+          </div>
+        </ul>
+      </div>
+      <div class="container">
+        <!-- LOGIN -->
+        <div
+          v-if="!this.state.userJWT && this.state.currentPage == this._pages.LOGIN"
+        >
+          <!-- LOGIN -->
+          <button @click="login()">Login</button>
+        </div>
+        <!-- Create access code -->
+        <div v-if="this.state.userJWT">
+          <p></p>
+          <p>
+            <b>Punto de venta:</b>
+            {{this.state.userData.pointOfSaleFriendlyName}} -
+            {{this.state.userData.pointOfSaleName}}
+          </p>
+        </div>
+
+        <div
+          v-if="this.state.userJWT && this.state.currentPage == this._pages.CREATE_ACCESS_CODE"
+        >
+          <select id="selected-plan">
+            <option
+              v-for="(plan, index) in this.state.userData.availablePlans"
+              v-bind:value="plan.id"
+            >
+              {{ plan.name }}
+            </option>
+          </select>
+          <button @click="createAccessCode()">Crear ficha</button>
+        </div>
+        <h1>{{ message }}</h1>
+      </div>
+    </div>
+    <script>
+      const { createApp } = Vue;
+      const pages = {
+        LOGIN: "LOGIN",
+        CREATE_ACCESS_CODE: "CREATE_ACCESS_CODE",
+        ACCESS_CODE_TABLE: "ACCESS_CODE_TABLE",
+      };
+      createApp({
+        mounted() {
+          const savedState = localStorage.getItem("state");
+          if (savedState) {
+            this.state = JSON.parse(savedState);
+          } else {
+            this.saveState();
+          }
+        },
+        data() {
+          return {
+            creatingAccessCode: false,
+            _pages: pages,
+            state: {
+              currentPage: pages.LOGIN,
+              userJWT: null,
+              userData: null,
+            },
+          };
+        },
+        methods: {
+          async login() {
+            const loginResponse = await fetch("/login", {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                accept: "application/json",
+              },
+              body: JSON.stringify({
+                username: "carlos@connecting-company",
+                password: "qhi5h4po",
+              }),
+            });
+            if (loginResponse.status == 200) {
+              const body = await loginResponse.json();
+              this.state.userJWT = body.token;
+              this.state.currentPage = pages.CREATE_ACCESS_CODE;
+              this.state.userData = jwt_decode(body.token);
+              this.saveState();
+            } else {
+              confirm("Usuario o contraseña equivocada");
+            }
+          },
+
+          async createAccessCode() {
+            const selectedPlanId =
+              document.querySelector("#selected-plan").value;
+            const selectedPlan =
+              this.state.userData.availablePlans[selectedPlanId];
+            this.creatingAccessCode = true;
+            const accessCodeResponse = await fetch("/create-access-code", {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                Authorization: `Bearer ${this.state.userJWT}`,
+                accept: "application/json",
+              },
+              body: JSON.stringify(selectedPlan),
+            });
+            this.creatingAccessCode = false;
+            if (accessCodeResponse.status == 200) {
+              const accessCode = await accessCodeResponse.json();
+              confirm(`Ficha:${accessCode}`);
+            } else {
+              confirm("Algo salio mal, inténtalo nuevamente");
+            }
+          },
+
+          async logout() {
+            this.state.userJWT = null;
+            this.state.currentPage = pages.LOGIN;
+            this.saveState();
+          },
+
+          changePage(page) {
+            if (!this._pages[page]) throw "Unknown page";
+            this.state.currentPage = page;
+            this.saveState();
+          },
+          async getAccessCodes() {},
+          saveState() {
+            localStorage.setItem("state", JSON.stringify(this.state));
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
