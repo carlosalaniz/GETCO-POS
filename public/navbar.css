@@ -66,6 +66,7 @@
     border: 1px solid black;
     background: white;
     z-index: 9999;
+    overflow-y: scroll;
 }
 .modal hr {
     margin-top: -1em !important;
