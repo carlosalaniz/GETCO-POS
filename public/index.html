@@ -7,6 +7,12 @@
     <meta name="description" content="" />
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="./jwt-decode.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+      integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
     <!-- Google Fonts -->
     <link
       rel="stylesheet"
@@ -31,10 +37,25 @@
   </head>
   <body>
     <div id="app">
-      <div v-if="this.creatingAccessCode === true" class="loading-block">
+      <div class="modal" v-if="this.modal.show">
+        <div>
+          <h3>{{this.modal.title}}</h3>
+          <a href="#" class="modal-close" @click="this.modal.show = false">X</a>
+        </div>
+        <hr />
+        <div class="content" v-html="this.modal.html"></div>
+        <button
+          class="confirm-button"
+          @click="this.modal.show = false"
+          v-if="this.modal.confirm"
+        >
+          OK
+        </button>
+        <p></p>
+      </div>
+      <div class="loading-block" v-if="this.loadingScreen === true">
         <div class="img-container">
-          <p>Creado ficha...</p>
-          <img src="/pepe-dance-pepe-ru.gif" />
+          <img src="/loading.gif" />
         </div>
       </div>
       <div class="navbar">
@@ -71,11 +92,24 @@
           </div>
         </ul>
       </div>
+      <hr />
       <div class="container">
         <!-- LOGIN -->
         <div
           v-if="!this.state.userJWT && this.state.currentPage == this._pages.LOGIN"
         >
+          <p>
+            <label for="username">Usuario</label>
+            <input
+              type="text"
+              name="username"
+              placeholder="Nombre de usuario"
+            />
+          </p>
+          <p>
+            <label for="password">Contraseña</label>
+            <input type="password" name="password" placeholder="Contraseña" />
+          </p>
           <!-- LOGIN -->
           <button @click="login()">Login</button>
         </div>
@@ -123,7 +157,14 @@
         },
         data() {
           return {
-            creatingAccessCode: false,
+            modal: {
+              show: false,
+              html: `<div class="ficha"><p>3x1ggm<br><span id="access-code-qr"></span></p></div>`,
+              title: "Ficha creada",
+              confirm: true,
+            },
+
+            loadingScreen: false,
             _pages: pages,
             state: {
               currentPage: pages.LOGIN,
@@ -133,7 +174,17 @@
           };
         },
         methods: {
+          showModal(title, html, confirm) {
+            this.modal.title = title;
+            this.modal.html = html;
+            this.modal.confirm = confirm;
+            this.modal.show = true;
+          },
+
           async login() {
+            await this.showLoading();
+            const username = document.querySelector("[name=username]").value;
+            const password = document.querySelector("[name=password]").value;
             const loginResponse = await fetch("/login", {
               method: "POST",
               headers: {
@@ -141,10 +192,11 @@
                 accept: "application/json",
               },
               body: JSON.stringify({
-                username: "carlos@connecting-company",
-                password: "qhi5h4po",
+                username: username,
+                password: password,
               }),
             });
+            await this.hideLoading();
             if (loginResponse.status == 200) {
               const body = await loginResponse.json();
               this.state.userJWT = body.token;
@@ -152,8 +204,38 @@
               this.state.userData = jwt_decode(body.token);
               this.saveState();
             } else {
-              confirm("Usuario o contraseña equivocada");
+              this.showModal("Error", "Usuario o contraseña equivocada", true);
             }
+          },
+
+          async c1reateAccessCode() {
+            await this.showLoading();
+            await new Promise((resolve) =>
+              setTimeout(() => {
+                resolve();
+              }, 1000)
+            );
+            await this.hideLoading();
+            const result = {
+              PIN: "3jzacz",
+              Plan: "3BD.02 - 1 Dia",
+              Descarga: "Ilimitado",
+              "Duración": "1d",
+              "Expira en": "1d",
+              loginUrl: "http://192.168.8.1/login?username=3jzacz%26password=",
+            };
+            this.showModal(
+              "Ficha creada",
+              `<table><tr><td><b>PIN</b><td>${result["PIN"]}<tr><td><b>Plan</b><td>${result["Plan"]}<tr><td><b>Descarga</b><td>${result["Descarga"]}<tr><td><b>Duración</b><td>${result["Duración"]}<tr><td><b>Expira en</b><td>${result["Expira en"]}</table><div id=access-code-qr></div>`,
+              true
+            );
+            await this.$nextTick(() => {
+              new QRCode(document.getElementById("access-code-qr"), {
+                text: result.loginUrl,
+                // width: 150,
+                // height: 150,
+              });
+            });
           },
 
           async createAccessCode() {
@@ -161,7 +243,7 @@
               document.querySelector("#selected-plan").value;
             const selectedPlan =
               this.state.userData.availablePlans[selectedPlanId];
-            this.creatingAccessCode = true;
+            await this.showLoading();
             const accessCodeResponse = await fetch("/create-access-code", {
               method: "POST",
               headers: {
@@ -171,12 +253,27 @@
               },
               body: JSON.stringify(selectedPlan),
             });
-            this.creatingAccessCode = false;
+            await this.hideLoading();
             if (accessCodeResponse.status == 200) {
-              const accessCode = await accessCodeResponse.json();
-              confirm(`Ficha:${accessCode}`);
+              const result = await accessCodeResponse.json();
+              this.showModal(
+              "Ficha creada",
+              `<table><tr><td><b>Costo</b><td>${result["Costo"]}<tr><td><b>PIN</b><td>${result["PIN"]}<tr><td><b>Plan</b><td>${result["Plan"]}<tr><td><b>Descarga</b><td>${result["Descarga"]}<tr><td><b>Duración</b><td>${result["Duración"]}<tr><td><b>Expira en</b><td>${result["Expira en"]}</table><div id=access-code-qr></div>`,
+              true
+            );
+            await this.$nextTick(() => {
+              new QRCode(document.getElementById("access-code-qr"), {
+                text: result.loginUrl,
+                // width: 150,
+                // height: 150,
+              });
+            });
             } else {
-              confirm("Algo salio mal, inténtalo nuevamente");
+              this.showModal(
+                "Error",
+                "Algo salio mal, inténtalo nuevamente",
+                true
+              );
             }
           },
 
@@ -191,9 +288,23 @@
             this.state.currentPage = page;
             this.saveState();
           },
+
           async getAccessCodes() {},
+
           saveState() {
             localStorage.setItem("state", JSON.stringify(this.state));
+          },
+
+          async showLoading() {
+            this.loadingScreen = true;
+            await this.$nextTick();
+            await this.$forceUpdate();
+          },
+
+          async hideLoading() {
+            this.loadingScreen = false;
+            await this.$nextTick();
+            await this.$forceUpdate();
           },
         },
       }).mount("#app");

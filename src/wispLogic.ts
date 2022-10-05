@@ -7,7 +7,7 @@ import { FileKeyValueStorage, IKeyValueStorage } from "./storage";
 export interface IWispLogic {
     login(username: string, password: string): Promise<any>
     getPlans(username: string, deviceId: number, pointOfSaleName: string, cookieJar: CookieJar): Promise<Plans>
-    createAccessCode(username: string, deviceId: number, plan: Plan, cookieJar: CookieJar): Promise<string>
+    createAccessCode(username: string, deviceId: number, plan: Plan, cookieJar: CookieJar): Promise<{}>
 }
 
 //TODO: Define cookie jar type
@@ -85,8 +85,6 @@ export class WispHubWispLogic implements IWispLogic {
                 `&password=${password}` +
                 `&token_device=&name_device=&type_device=&remember=1`;
             var loginPageCookies = this.getCookieJar(loginResponse)
-            console.log(csrfToken)
-            console.log(loginPageCookies)
             const doLoginResponse = await fetch("https://cloud.co-co.mx/accounts/login/", {
                 redirect: "manual",
                 headers: {
@@ -149,7 +147,7 @@ export class WispHubWispLogic implements IWispLogic {
         return result;
     }
 
-    async createAccessCode(username: string, deviceId: number, plan: Plan, cookieJar: CookieJar): Promise<string> {
+    async createAccessCode(username: string, deviceId: number, plan: Plan, cookieJar: CookieJar): Promise<{}> {
         const { JSDOM } = jsdom;
         const cookiesKey = this.cookiesKey(username)
         // Prepare
@@ -212,15 +210,21 @@ export class WispHubWispLogic implements IWispLogic {
             }
             const taskConfirmationHtml = await taskConfirmationResponse.text()
             const taskConfirmationDocument = new JSDOM(taskConfirmationHtml).window.document;
+            const loginURLRegExp = new RegExp('(?<=qr/\\?text=).+(?=" width)')
+            const loginURLMatch = taskConfirmationHtml.match(loginURLRegExp);
+            const loginUrl = loginURLMatch && loginURLMatch[0];
             const details = Array.from(taskConfirmationDocument.querySelectorAll(".detalles p"))
                 .map((p: any) => p.textContent)
                 .reduce((acc, n) => {
                     const [key, value] = n.split(":").map(kv => kv.trim());
                     if (value)
                         acc[key] = value
+                    else if(key.includes('$')){
+                        acc["Costo"] = key
+                    }
                     return acc
                 }, {})
-            return details.PIN
+            return {...details, loginUrl}
         } else {
             throw `taskStatus=${taskStatus} is not SUCCESS`
         }

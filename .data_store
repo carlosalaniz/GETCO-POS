@@ -1,12 +1,1 @@
-{
-    "carlos@connecting-company-user": {
-        "password": "sha1$5f8d240e$1$810cd816bc6bcbc703b8cb897672c973002618d8",
-        "pointOfSaleFriendlyName": "Tiendita doña juana",
-        "wispHub": {
-            "username": "carlos@connecting-company",
-            "password": "carloscarlos123",
-            "deviceId": 927,
-            "pointOfSaleName": "3BD.02"
-        }
-    }
-}
+{"carlos@connecting-company-user":{"password":"sha1$5f8d240e$1$810cd816bc6bcbc703b8cb897672c973002618d8","pointOfSaleFriendlyName":"Tiendita doña juana","wispHub":{"username":"carlos@connecting-company","password":"carloscarlos123","deviceId":927,"pointOfSaleName":"3BD.02"}},"carlos@connecting-company-cookies":{"csrftoken":{"csrftoken":"By9yvroWZmtnj5fm5N0UucAEsKFtPW1NkkAyOzh5tvIeCpxw6nbUEIZJR6QAZ4B3","expires":"Wed, 04-Oct-2023 02:23:17 GMT","Max-Age":"31449600","Path":"/"},"sessionid":{"sessionid":"wdytjmoq7v35rybmfs6yew85xs793gsf","expires":"Wed, 19-Oct-2022 02:23:17 GMT","Max-Age":"1209600","Path":"/"},"messages":{"messages":"","expires":"Thu, 01-Jan-1970 00:00:00 GMT","Max-Age":"0","Path":"/"}}}
