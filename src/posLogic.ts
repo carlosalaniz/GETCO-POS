@@ -21,10 +21,10 @@ export class POSLogic {
         try {
             const state = await this.storage.read(username)
             if (!state) throw `username ${username} does not have an active session`
-            const accessCode = await this.wispLogic.createAccessCode(username, state as any, {} as any, {} as any)
+            const accessCode = await this.wispLogic.createAccessCode(username, state as any, {} as any, {} as any) as any
             const accessCodeKey = this.accessCodesKey(username)
             var accessCodes = await this.storage.read<AccessCode[]>(accessCodeKey) || []
-            await this.storage.write<AccessCode[]>(accessCodeKey, [...accessCodes, { code: accessCode, added_on: new Date() }])
+            await this.storage.write<AccessCode[]>(accessCodeKey, [...accessCodes, { code: accessCode.PIN as string, added_on: new Date() }])
             return accessCode;
         } catch (e) {
             console.error(e)
