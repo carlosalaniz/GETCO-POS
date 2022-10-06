@@ -10,7 +10,7 @@ export class MemoryKeyValueStorage implements IKeyValueStorage {
         return data
     }
     read<T>(key: string): T | undefined {
-        return this.dataStore[key] as T
+        return this.dataStore[key]
     }
 }
 

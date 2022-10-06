@@ -9,7 +9,7 @@ import * as passwordHash from 'password-hash';
 import { FileKeyValueStorage } from './storage';
 import * as jwt from 'jsonwebtoken';
 import { expressjwt, Request as JWTRequest } from "express-jwt";
-import { WispHubWispLogic } from './wispLogic';
+import { Plan, WispHubWispLogic } from './wispLogic';
 
 //types
 type User = {
@@ -18,7 +18,6 @@ type User = {
     wispHub: {
         username: string,
         password: string,
-        deviceId: 927,
         pointOfSaleName: string
     }
 }
@@ -48,18 +47,17 @@ app.post("/login", async (req: LoginRequest, res: Response) => {
     const userKey = `${body.username}-user`
     const user = storage.read<User>(userKey)
     if (user && passwordHash.verify(body.password, user.password)) {
-        const cookieJar = await wispHubLogic.login(
+        // try to login
+        await wispHubLogic.login(
             user.wispHub.username, user.wispHub.password
         )
+        // generate token
         const token = jwt.sign({
             username: body.username,
             pointOfSaleName: user.wispHub.pointOfSaleName,
             pointOfSaleFriendlyName: user.pointOfSaleFriendlyName,
             availablePlans: await wispHubLogic.getPlans(
-                user.wispHub.username,
-                user.wispHub.deviceId,
-                user.wispHub.pointOfSaleName,
-                cookieJar
+                user.wispHub.pointOfSaleName
             )
         }, SIGN_SECRET);
         return res.json({ token: token })
@@ -76,14 +74,8 @@ app.get('/plans',
         const userKey = `${username}-user`
         const user = storage.read<User>(userKey)
         if (!user) return res.sendStatus(401)
-        const cookieJar = await wispHubLogic.login(
-            user.wispHub.username, user.wispHub.password
-        )
         const plans = await wispHubLogic.getPlans(
-            user.wispHub.username,
-            user.wispHub.deviceId,
-            user.wispHub.pointOfSaleName,
-            cookieJar
+            user.wispHub.pointOfSaleName
         );
         return res.json(plans);
     }
@@ -102,14 +94,27 @@ app.post('/create-access-code',
         )
         const accessCode = await wispHubLogic.createAccessCode(
             user.wispHub.username,
-            user.wispHub.deviceId,
-            req.body,
+            req.body as Plan,
+            user.wispHub.pointOfSaleName,
             cookieJar
         );
         return res.json(accessCode);
     }
 );
 
+app.get('/refresh-plans',
+    expressjwt({ secret: SIGN_SECRET, algorithms: ["HS256"] }),
+    async function (req: JWTRequest, res: express.Response) {
+
+    }
+)
+
+app.get("/monthly-access-codes",
+    expressjwt({ secret: SIGN_SECRET, algorithms: ["HS256"] }),
+    async function (req: JWTRequest, res: express.Response) {
+
+    }
+)
 app.listen(port, async () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
