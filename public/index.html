@@ -113,6 +113,7 @@
           <!-- LOGIN -->
           <button @click="login()">Login</button>
         </div>
+
         <!-- Create access code -->
         <div v-if="this.state.userJWT">
           <p></p>
@@ -131,12 +132,47 @@
               v-for="(plan, index) in this.state.userData.availablePlans"
               v-bind:value="plan.id"
             >
-              {{ plan.name }}
+              {{ plan.name }} - ${{plan.price}} {{plan.currency}}
             </option>
           </select>
           <button @click="createAccessCode()">Crear ficha</button>
         </div>
-        <h1>{{ message }}</h1>
+
+        <div
+          v-if="this.state.userJWT && this.state.currentPage == this._pages.ACCESS_CODE_TABLE"
+        >
+          <div>
+            <button @click="loadMonthlyAccessCodes()" style="float: right;"><small>Actualizar</small></button>
+            <div>
+              <span><strong>Fichas creadas: </strong>{{this.state.accessCodes.length}}</span>
+            </div>
+            <div>
+              <span>
+                <strong> Balance pendiente: </strong> ${{this.state.pendingBalance.toFixed(2)}} MXN</span>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Ficha</th>
+                <th>Estado</th>
+                <th>Fecha de creación</th>
+                <th>Fecha de expiración</th>
+                <th>Plan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(accessCode, index) in this.state.accessCodes">
+                <td>{{accessCode.accessCode}}</td>
+                <td>{{accessCode.state}}</td>
+                <td>{{accessCode.createAt && new Date(accessCode.createAt).toLocaleString()}}</td>
+                <td>{{accessCode.expiration && new Date(accessCode.expiration).toLocaleString()}}</td>
+                <td>{{accessCode.plan}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     <script>
@@ -208,36 +244,6 @@
             }
           },
 
-          async c1reateAccessCode() {
-            await this.showLoading();
-            await new Promise((resolve) =>
-              setTimeout(() => {
-                resolve();
-              }, 1000)
-            );
-            await this.hideLoading();
-            const result = {
-              PIN: "3jzacz",
-              Plan: "3BD.02 - 1 Dia",
-              Descarga: "Ilimitado",
-              "Duración": "1d",
-              "Expira en": "1d",
-              loginUrl: "http://192.168.8.1/login?username=3jzacz%26password=",
-            };
-            this.showModal(
-              "Ficha creada",
-              `<table><tr><td><b>PIN</b><td>${result["PIN"]}<tr><td><b>Plan</b><td>${result["Plan"]}<tr><td><b>Descarga</b><td>${result["Descarga"]}<tr><td><b>Duración</b><td>${result["Duración"]}<tr><td><b>Expira en</b><td>${result["Expira en"]}</table><div id=access-code-qr></div>`,
-              true
-            );
-            await this.$nextTick(() => {
-              new QRCode(document.getElementById("access-code-qr"), {
-                text: result.loginUrl,
-                // width: 150,
-                // height: 150,
-              });
-            });
-          },
-
           async createAccessCode() {
             const selectedPlanId =
               document.querySelector("#selected-plan").value;
@@ -257,17 +263,17 @@
             if (accessCodeResponse.status == 200) {
               const result = await accessCodeResponse.json();
               this.showModal(
-              "Ficha creada",
-              `<table><tr><td><b>Costo</b><td>${result["Costo"]}<tr><td><b>PIN</b><td>${result["PIN"]}<tr><td><b>Plan</b><td>${result["Plan"]}<tr><td><b>Descarga</b><td>${result["Descarga"]}<tr><td><b>Duración</b><td>${result["Duración"]}<tr><td><b>Expira en</b><td>${result["Expira en"]}</table><div id=access-code-qr></div>`,
-              true
-            );
-            await this.$nextTick(() => {
-              new QRCode(document.getElementById("access-code-qr"), {
-                text: result.loginUrl,
-                // width: 150,
-                // height: 150,
+                "Ficha creada",
+                `<table><tr><td><b>Costo</b><td>${result["Costo"]}<tr><td><b>PIN</b><td>${result["PIN"]}<tr><td><b>Plan</b><td>${result["Plan"]}<tr><td><b>Descarga</b><td>${result["Descarga"]}<tr><td><b>Duración</b><td>${result["Duración"]}<tr><td><b>Expira en</b><td>${result["Expira en"]}</table><div id=access-code-qr></div>`,
+                true
+              );
+              await this.$nextTick(() => {
+                new QRCode(document.getElementById("access-code-qr"), {
+                  text: result.loginUrl,
+                  // width: 150,
+                  // height: 150,
+                });
               });
-            });
             } else {
               this.showModal(
                 "Error",
@@ -283,8 +289,50 @@
             this.saveState();
           },
 
-          changePage(page) {
-            if (!this._pages[page]) throw "Unknown page";
+          async loadMonthlyAccessCodes() {
+            await this.showLoading();
+            const monthlyAccessCodesResponse = await fetch(
+              "/monthly-access-codes",
+              {
+                method: "GET",
+                headers: {
+                  "content-type": "application/json",
+                  Authorization: `Bearer ${this.state.userJWT}`,
+                  accept: "application/json",
+                },
+              }
+            );
+            const monthlyAccessCodes = await monthlyAccessCodesResponse.json();
+            const codes = Object.entries(monthlyAccessCodes.data)
+              .map(([planId, data]) => {
+                return data.accessCodes.map((ac) => {
+                  return {
+                    ...ac,
+
+                    plan: data.plan.name,
+                    price: data.plan.price,
+                    currency: data.plan.currency,
+                  };
+                });
+              })
+              .flat();
+            this.state.accessCodes = codes.sort((a, b)=> new Date(b.createAt) - new Date(a.createAt));
+            this.state.pendingBalance = codes.reduce(
+              (acc, code) => (acc += parseFloat(code.price)),
+              0.0
+            );
+            this.saveState();
+            await this.hideLoading();
+          },
+
+          async changePage(page) {
+            if (!pages[page]) throw "Unknown page";
+            switch (page) {
+              case pages.ACCESS_CODE_TABLE:
+                await this.loadMonthlyAccessCodes();
+                break;
+              default:
+            }
             this.state.currentPage = page;
             this.saveState();
           },
