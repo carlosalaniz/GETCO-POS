@@ -12,7 +12,7 @@ export interface IWispLogic {
 }
 
 //TODO: Define cookie jar type
-type CookieJar = {}
+export type CookieJar = {}
 type PlanExtras = {
     plan: string,
     planLongName: string,
@@ -43,6 +43,7 @@ type PlanPointOfSaleMap = {
 
 
 export class WispHubWispLogic implements IWispLogic {
+
     private cookiesKey = (username: string) => `${username}-cookies`
     private pointsOfSaleKey = "WISP_HUB_POINTS_OF_SALE";
     private plansKey = "WISP_HUB_PLANS";
@@ -223,7 +224,7 @@ export class WispHubWispLogic implements IWispLogic {
         const { JSDOM } = jsdom;
         const cookiesKey = this.cookiesKey(username)
         // Prepare
-        const createAccessFormResponse = await fetch(`https://cloud.co-co.mx/crear-fichas`, {
+        const createAccessFormResponse = await fetch(`https://cloud.co-co.mx/crear-fichas/`, {
             headers: {
                 "cookie": this.cookieJarToString(cookieJar)
             }
@@ -235,17 +236,18 @@ export class WispHubWispLogic implements IWispLogic {
 
         // Create AccessCode
         const pos = plan.pointOfSale.find(pos => pos.name === pointOfSaleName)
-        const createAccessCodeResponse = await fetch(`https://cloud.co-co.mx/crear-fichas`, {
+        const createAccessCodeResponse = await fetch(`https://cloud.co-co.mx/crear-fichas/`, {
             headers: {
                 "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
                 "accept-language": "en-US,en;q=0.8",
                 "content-type": "application/x-www-form-urlencoded",
-                "cookie": this.cookieJarToString(cookieJar)
+                "cookie": this.cookieJarToString(cookieJar),
+                "Referer": "https://cloud.co-co.mx/crear-fichas/",
+                "Referrer-Policy": "strict-origin-when-cross-origin"
             },
-            referrer: "https://cloud.co-co.mx/crear-fichas/927/",
             referrerPolicy: "strict-origin-when-cross-origin",
             body:
-                `csrfmiddlewaretoken=${csrfToken}&plan=${plan.id}&cantidad=1&punto_venta=${pos.id}&imprimir=miniprinter`,
+                `csrfmiddlewaretoken=${csrfToken}&plan=${plan.id}&cantidad=1&punto_venta=&imprimir=miniprinter`,
             method: "POST"
         });
         cookieJar = this.updateCookieJar(cookiesKey, createAccessCodeResponse, cookieJar)
@@ -303,12 +305,39 @@ export class WispHubWispLogic implements IWispLogic {
         }
     }
 
-    async getPlanGeneratedAccessCodes(pointOfSaleName: string, cookieJar: CookieJar) {
+    private parseDate(dateString: string): Date {
+        const match = dateString.match(/^(\d\d?)\/(\d\d?)\/(\d{4}) (\d{2}):(\d{2})/)
+        return match && match.slice(1)
+            .reduce((accDate, value, index) => {
+                switch (index) {
+                    case 0:
+                        // day
+                        accDate.setDate(+value)
+                        break;
+                    case 1:
+                        accDate.setMonth(+value - 1)
+                        // month
+                        break;
+                    case 2:
+                        // year
+                        accDate.setFullYear(+value)
+                        break;
+                    case 3:
+                        // hours
+                        accDate.setHours(+value)
+                        break;
+                    case 4:
+                        // minutes
+                        accDate.setMinutes(+value)
+                        break;
+                }
+                return accDate;
+            }, new Date(new Date().setHours(0, 0, 0, 0)))
+    }
+
+    async getPlanGeneratedAccessCodes(pointOfSaleName: string, fromDate: Date, cookieJar: CookieJar) {
         const plansMap = await this.getPlans(pointOfSaleName)
-        const now = new Date();
-        const [currentMonth, currentYear] = [now.getMonth(), now.getFullYear()]
-        const beginningOfTheMonth = new Date(currentYear, currentMonth, 1);
-        const plans = Object.values(plansMap)
+        const plans = Object.values(plansMap).filter(plan => plan.pointOfSale.find(pos => pos.name === pointOfSaleName))
         const allAccessCodes = await Promise.all(plans.map(async plan => {
             const accessCodeResponse = await fetch(`https://cloud.co-co.mx/fichas/json/ver/${plan.prefix}/${plan.id}/?draw=1&start=0&length=9999&search%5Bvalue%5D=`, {
                 redirect: "manual",
@@ -321,8 +350,10 @@ export class WispHubWispLogic implements IWispLogic {
                 referrerPolicy: "strict-origin-when-cross-origin",
                 method: "GET"
             })
-            if (accessCodeResponse.status == 200)
-                return accessCodeResponse.json() as any;
+            if (accessCodeResponse.status == 200) {
+                const accessCodes = await accessCodeResponse.json() as any
+                return { ...accessCodes, plan }
+            }
             throw `accessCodeResponse.status=${accessCodeResponse.status}`
         }))
         const accessCodes = allAccessCodes.reduce((acc, accessCodeResponseObject) => {
@@ -345,25 +376,35 @@ export class WispHubWispLogic implements IWispLogic {
                     return accDate;
                 }, new Date())
                 creationDate.setHours(0, 0, 0, 0)
-                return accessCode.punto_venta === pointOfSaleName && beginningOfTheMonth <= creationDate
+                return fromDate <= creationDate
             });
             acc.recordsTotal += data.length;
-            acc.data.push(
-                ...data.map(accessCode => {
+            acc.data[accessCodeResponseObject.plan.id] = {
+                recordsTotal: data.length,
+                plan: {
+                    id: +accessCodeResponseObject.plan.id,
+                    plan: accessCodeResponseObject.plan.plan,
+                    price: accessCodeResponseObject.plan.price,
+                    currency: accessCodeResponseObject.plan.currency,
+                    name: accessCodeResponseObject.plan.name
+                },
+                accessCodes: data.map(accessCode => {
                     return {
-                        accessCodeId: accessCode["id_ficha"],
-                        dateCreated: accessCode["fecha_creacion"],
+                        accessCodeId: +accessCode["id_ficha"],
+                        createAt: this.parseDate(accessCode["fecha_creacion"]),
+                        soldAt: this.parseDate(accessCode["fecha_compra"]),
+                        expiration: this.parseDate(accessCode["fecha_expiracion"]),
                         accessCode: accessCode["usuario"],
-                        plan: accessCode["prefijo"],
+                        pointOfSale: accessCode["punto_venta"],
                         active: accessCode["activada"].match(/(?<=estado-ficha-).+(?=')/)[0],
                         state: accessCode["estado"].match(/(?<=estado-ficha-).+(?=')/)[0],
                     }
                 })
-            )
+            }
             return acc
         }, {
             recordsTotal: 0,
-            data: []
+            data: {}
         });
         return accessCodes;
     }
@@ -380,7 +421,10 @@ const test = async () => {
     const cookieJar = await wispHub.login(username, password)
     const plans = await wispHub.getPlans(pointOfSaleName)
     console.log(plans);
-    const a = await wispHub.getPlanGeneratedAccessCodes(pointOfSaleName, cookieJar);
+    const now = new Date();
+    const [currentMonth, currentYear] = [now.getMonth(), now.getFullYear()]
+    const beginningOfTheMonth = new Date(currentYear, currentMonth, 1);
+    const a = await wispHub.getPlanGeneratedAccessCodes(pointOfSaleName, beginningOfTheMonth, cookieJar);
     console.log(a);
     // try {
     //     const plans = await wispHub.refreshPlans(username, cookieJar);
@@ -397,4 +441,4 @@ const test = async () => {
 
 }
 
-test()
+// test()
