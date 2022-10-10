@@ -50,11 +50,6 @@ app.use(express.static('public'))
 
 app.use(bodyParser.json());
 
-// app.get("/", async (req: Request, res: Response) => {
-//     res.send('Hello World');
-// })
-
-
 app.post("/login", async (req: LoginRequest, res: express.Response) => {
     const body = req.body;
     const userKey = `${body.username}-user`
