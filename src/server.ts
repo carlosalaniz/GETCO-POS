@@ -41,7 +41,7 @@ const extractUser = () => async function (req, res, next) {
 const app = express();
 const port = 8080;
 const storage = new FileKeyValueStorage()
-const wispHubLogic = new WispHubWispLogic(storage);
+const wispHubLogic = new WispHubWispLogic(storage, "pos-admin@connecting-company");
 
 const SIGN_SECRET = "The character is functionally immortal. Their latest lover, after a string of decades long tragedies, has just passed."
 
@@ -115,21 +115,36 @@ app.get('/refresh-plans',
     }
 )
 
+
+
 app.get("/monthly-access-codes",
     expressjwt({ secret: SIGN_SECRET, algorithms: ["HS256"] }),
     extractUser(),
     async function (req: userRequest, res: express.Response) {
         const now = new Date();
-        const [currentMonth, currentYear] = [now.getMonth(), now.getFullYear()]
-        const beginningOfTheMonth = new Date(currentYear, currentMonth, 1);
+        const posOnly = req.query.pos_only !== undefined ? req.query.pos_only === 'true' : true;
+        const startMonth = +((
+            req.query.month !== undefined
+            && Number.isInteger(+req.query.month)
+            && req.query.month as string
+        ) || now.getMonth().toString())
+        const [currentMonth, currentYear] = [startMonth, now.getFullYear()]
+        const fromDate = new Date(currentYear, currentMonth, 1);
+        fromDate.setHours(0, 0, 0, 0)
+        const toDate = new Date(fromDate);
+        toDate.setMonth(startMonth + 1);
         const monthlyAccessCodes = await wispHubLogic.getPlanGeneratedAccessCodes(
             req.user.wispHub.pointOfSaleName,
-            beginningOfTheMonth,
+            fromDate,
+            toDate,
+            posOnly,
             req.cookieJar
         )
+
         return res.json(monthlyAccessCodes);
     }
 )
+
 app.listen(port, async () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });

@@ -43,11 +43,9 @@ type PlanPointOfSaleMap = {
 
 
 export class WispHubWispLogic implements IWispLogic {
-
     private cookiesKey = (username: string) => `${username}-cookies`
-    private pointsOfSaleKey = "WISP_HUB_POINTS_OF_SALE";
     private plansKey = "WISP_HUB_PLANS";
-    constructor(private keyValueStorage: IKeyValueStorage) { }
+    constructor(private keyValueStorage: IKeyValueStorage, private pointOfSaleUser: string) { }
 
 
     getCsrfmiddlewaretoken(document: Document) {
@@ -335,7 +333,10 @@ export class WispHubWispLogic implements IWispLogic {
             }, new Date(new Date().setHours(0, 0, 0, 0)))
     }
 
-    async getPlanGeneratedAccessCodes(pointOfSaleName: string, fromDate: Date, cookieJar: CookieJar) {
+    async getPlanGeneratedAccessCodes(pointOfSaleName: string,
+        fromDate: Date,
+        toDate: Date,
+        posOnly: boolean, cookieJar: CookieJar) {
         const plansMap = await this.getPlans(pointOfSaleName)
         const plans = Object.values(plansMap).filter(plan => plan.pointOfSale.find(pos => pos.name === pointOfSaleName))
         const allAccessCodes = await Promise.all(plans.map(async plan => {
@@ -358,6 +359,7 @@ export class WispHubWispLogic implements IWispLogic {
         }))
         const accessCodes = allAccessCodes.reduce((acc, accessCodeResponseObject) => {
             const data = accessCodeResponseObject.data.filter(accessCode => {
+                const pointOfSale = accessCode["punto_venta"];
                 const creationDate = accessCode["fecha_creacion"].match(/^(\d\d?)\/(\d\d?)\/(\d{4})/).slice(1).reduce((accDate, value, index) => {
                     switch (index) {
                         case 0:
@@ -375,9 +377,15 @@ export class WispHubWispLogic implements IWispLogic {
                     }
                     return accDate;
                 }, new Date())
-                creationDate.setHours(0, 0, 0, 0)
-                return fromDate <= creationDate
+                const filter = creationDate >= fromDate
+                    && creationDate < toDate
+                    && (!posOnly || pointOfSale == this.pointOfSaleUser);
+                if (filter) {
+                    console.log(accessCode)
+                }
+                return filter;
             });
+
             acc.recordsTotal += data.length;
             acc.data[accessCodeResponseObject.plan.id] = {
                 recordsTotal: data.length,
@@ -412,7 +420,7 @@ export class WispHubWispLogic implements IWispLogic {
 
 
 const test = async () => {
-    const wispHub = new WispHubWispLogic(new FileKeyValueStorage());
+    const wispHub = new WispHubWispLogic(new FileKeyValueStorage(), "");
     const username = "carlos@connecting-company"
     const password = "carloscarlos123"
     const pointOfSaleName = "3bd.02@connecting-company"
@@ -424,7 +432,9 @@ const test = async () => {
     const now = new Date();
     const [currentMonth, currentYear] = [now.getMonth(), now.getFullYear()]
     const beginningOfTheMonth = new Date(currentYear, currentMonth, 1);
-    const a = await wispHub.getPlanGeneratedAccessCodes(pointOfSaleName, beginningOfTheMonth, cookieJar);
+    const toDate = new Date(beginningOfTheMonth); toDate.setMonth(beginningOfTheMonth.getMonth() + 1)
+    const a = await wispHub.getPlanGeneratedAccessCodes(pointOfSaleName,
+        beginningOfTheMonth, toDate, false, cookieJar);
     console.log(a);
     // try {
     //     const plans = await wispHub.refreshPlans(username, cookieJar);

@@ -110,3 +110,44 @@
     align-items: center;
     justify-content: center;
 }
+
+.pos-header {
+    text-align: center;
+}
+.table-compressed td,
+th {
+    padding: 0.2rem 0.5rem !important;
+}
+
+.table-compressed .header-row {
+    background: #f0f0f0;
+}
+.table-compressed .first-col {
+    background: #f0f0f0;
+    font-weight: 600;
+    text-align: center;
+    color: #606c76;
+}
+
+.table-compressed .second-col {
+    padding-left: 0.5em !important;
+}
+
+.select_month {
+    margin-top: 1em;
+}
+.select_month a {
+    font-size: 0.8em;
+    color: black !important;
+    text-decoration: none;
+}
+
+.select_month .active_month {
+    font-size: 1em;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.select_month a:hover {
+    text-decoration: underline;
+}
