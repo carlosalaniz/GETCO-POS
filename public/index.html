@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <title>Connecting Company</title>
-    <link rel="icon" type="image/x-icon" href="fav.ico">
+    <link rel="icon" type="image/x-icon" href="fav.ico" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content="" />
@@ -93,7 +93,7 @@
           </div>
         </ul>
       </div>
-      <hr />
+      <p></p>
       <div class="container">
         <!-- LOGIN -->
         <div
@@ -116,17 +116,18 @@
         </div>
 
         <!-- Create access code -->
-        <div v-if="this.state.userJWT">
-          <p></p>
+        <div v-if="this.state.userJWT" class="pos-header">
           <p>
-            <b>Punto de venta:</b>
-            {{this.state.userData.pointOfSaleFriendlyName}} -
+            <b>{{this.state.userData.pointOfSaleFriendlyName}}</b>
+            <br />
             {{this.state.userData.pointOfSaleName}}
           </p>
+          <hr />
         </div>
 
         <div
           v-if="this.state.userJWT && this.state.currentPage == this._pages.CREATE_ACCESS_CODE"
+          v
         >
           <select id="selected-plan">
             <option
@@ -143,33 +144,68 @@
           v-if="this.state.userJWT && this.state.currentPage == this._pages.ACCESS_CODE_TABLE"
         >
           <div>
-            <button @click="loadMonthlyAccessCodes()" style="float: right;"><small>Actualizar</small></button>
+            <button
+              @click="this.state.selectedMonth = this.getCurrentMonth(); loadMonthlyAccessCodes()"
+              style="float: right"
+            >
+              <small>Actualizar</small>
+            </button>
             <div>
-              <span><strong>Fichas creadas: </strong>{{this.state.accessCodes.length}}</span>
+              <span
+                ><strong>Fichas creadas: </strong
+                >{{this.state.accessCodes.length}}</span
+              >
             </div>
             <div>
               <span>
-                <strong> Balance pendiente: </strong> ${{this.state.pendingBalance.toFixed(2)}} MXN</span>
+                <strong> Balance pendiente: </strong>
+                ${{this.state.pendingBalance.toFixed(2)}} MXN</span
+              >
+            </div>
+            <div>
+              <span class="select_month" style="float: left">
+                <a
+                  href="#"
+                  @click="this.state.selectedMonth = this.getCurrentMonth() - 1; loadMonthlyAccessCodes()"
+                  v-bind:class="{ active_month: this.state.selectedMonth === this.getCurrentMonth() - 1}"
+                  >{{this.getMonth(this.getCurrentMonth() - 1 )}}</a
+                >
+                |
+                <a
+                  href="#"
+                  @click="this.state.selectedMonth = this.getCurrentMonth(); loadMonthlyAccessCodes()"
+                  v-bind:class="{ active_month: this.state.selectedMonth === this.getCurrentMonth()}"
+                  >{{this.getMonth(this.getCurrentMonth())}}</a
+                >
+              </span>
             </div>
           </div>
 
-          <table>
+          <table class="table-compressed">
             <thead>
-              <tr>
+              <tr class="header-row">
                 <th>Ficha</th>
                 <th>Estado</th>
                 <th>Fecha de creación</th>
-                <th>Fecha de expiración</th>
+                <!-- <th>Fecha de expiración</th> -->
                 <th>Plan</th>
+                <th>Costo</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(accessCode, index) in this.state.accessCodes">
-                <td>{{accessCode.accessCode}}</td>
-                <td>{{accessCode.state}}</td>
-                <td>{{accessCode.createAt && new Date(accessCode.createAt).toLocaleString()}}</td>
-                <td>{{accessCode.expiration && new Date(accessCode.expiration).toLocaleString()}}</td>
+                <td class="first-col">{{accessCode.accessCode}}</td>
+                <td class="second-col">{{accessCode.state}}</td>
+                <td>
+                  {{accessCode.createAt && new
+                  Date(accessCode.createAt).toLocaleString()}}
+                </td>
+                <!-- <td>
+                  {{accessCode.expiration && new
+                  Date(accessCode.expiration).toLocaleString()}}
+                </td> -->
                 <td>{{accessCode.plan}}</td>
+                <td>${{accessCode.price}} {{accessCode.currency}}</td>
               </tr>
             </tbody>
           </table>
@@ -178,6 +214,20 @@
     </div>
     <script>
       const { createApp } = Vue;
+      const monthText = [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
+      ];
       const pages = {
         LOGIN: "LOGIN",
         CREATE_ACCESS_CODE: "CREATE_ACCESS_CODE",
@@ -187,7 +237,7 @@
         mounted() {
           const savedState = localStorage.getItem("state");
           if (savedState) {
-            this.state = JSON.parse(savedState);
+            this.state = { ...this.state, ...JSON.parse(savedState) };
           } else {
             this.saveState();
           }
@@ -204,6 +254,7 @@
             loadingScreen: false,
             _pages: pages,
             state: {
+              selectedMonth: new Date().getMonth(),
               currentPage: pages.LOGIN,
               userJWT: null,
               userData: null,
@@ -211,6 +262,13 @@
           };
         },
         methods: {
+          getCurrentMonth() {
+            return new Date().getMonth();
+          },
+          getMonth(monthNo) {
+            return monthText[monthNo];
+          },
+
           showModal(title, html, confirm) {
             this.modal.title = title;
             this.modal.html = html;
@@ -265,7 +323,7 @@
               const result = await accessCodeResponse.json();
               this.showModal(
                 "Ficha creada",
-                `<table><tr><td><b>Costo</b><td>${result["Costo"]}<tr><td><b>PIN</b><td>${result["PIN"]}<tr><td><b>Plan</b><td>${result["Plan"]}<tr><td><b>Descarga</b><td>${result["Descarga"]}<tr><td><b>Duración</b><td>${result["Duración"]}<tr><td><b>Expira en</b><td>${result["Expira en"]}</table><div id=access-code-qr></div>`,
+                `<div id=access-code-qr></div><div><br><p style=" border-bottom: 1px solid black;"></p></div><table><tr><td><b>Costo</b><td>${result["Costo"]}<tr><td><b>PIN</b><td>${result["PIN"]}<tr><td><b>Plan</b><td>${result["Plan"]}<tr><td><b>Descarga</b><td>${result["Descarga"]}<tr><td><b>Duración</b><td>${result["Duración"]}<tr><td><b>Expira en</b><td>${result["Expira en"]}</table>`,
                 true
               );
               await this.$nextTick(() => {
@@ -293,7 +351,7 @@
           async loadMonthlyAccessCodes() {
             await this.showLoading();
             const monthlyAccessCodesResponse = await fetch(
-              "/monthly-access-codes",
+              `/monthly-access-codes/?month=${this.state.selectedMonth}`,
               {
                 method: "GET",
                 headers: {
@@ -317,7 +375,9 @@
                 });
               })
               .flat();
-            this.state.accessCodes = codes.sort((a, b)=> new Date(b.createAt) - new Date(a.createAt));
+            this.state.accessCodes = codes.sort(
+              (a, b) => new Date(b.createAt) - new Date(a.createAt)
+            );
             this.state.pendingBalance = codes.reduce(
               (acc, code) => (acc += parseFloat(code.price)),
               0.0
@@ -330,7 +390,9 @@
             if (!pages[page]) throw "Unknown page";
             switch (page) {
               case pages.ACCESS_CODE_TABLE:
-                await this.loadMonthlyAccessCodes();
+                debugger;
+                this.state.selectedMonth = new Date().getMonth();
+                await this.loadMonthlyAccessCodes(this.selectedMonth);
                 break;
               default:
             }
