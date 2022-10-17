@@ -2,7 +2,6 @@
 import path = require('path');
 import * as cors from 'cors';
 import * as express from 'express';
-import { Response, Request } from 'express'
 import * as bodyParser from 'body-parser';
 import { LoginRequest } from './requests';
 import * as passwordHash from 'password-hash';

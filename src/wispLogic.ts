@@ -3,7 +3,7 @@ import { Response as FetchResponse } from "node-fetch";
 import * as jsdom from "jsdom";
 import * as tabletojson from 'tabletojson';
 
-import { FileKeyValueStorage, IKeyValueStorage } from "./storage";
+import { IKeyValueStorage } from "./storage";
 
 export interface IWispLogic {
     login(username: string, password: string): Promise<any>
@@ -39,8 +39,6 @@ type Plans = {
 type PlanPointOfSaleMap = {
     [planId: string]: { username: string, id_punto_venta: string }[]
 }
-
-
 
 export class WispHubWispLogic implements IWispLogic {
     private cookiesKey = (username: string) => `${username}-cookies`
@@ -377,13 +375,9 @@ export class WispHubWispLogic implements IWispLogic {
                     }
                     return accDate;
                 }, new Date())
-                const filter = creationDate >= fromDate
+                return creationDate >= fromDate
                     && creationDate < toDate
                     && (!posOnly || pointOfSale == this.pointOfSaleUser);
-                if (filter) {
-                    console.log(accessCode)
-                }
-                return filter;
             });
 
             acc.recordsTotal += data.length;
@@ -417,38 +411,3 @@ export class WispHubWispLogic implements IWispLogic {
         return accessCodes;
     }
 }
-
-
-const test = async () => {
-    const wispHub = new WispHubWispLogic(new FileKeyValueStorage(), "");
-    const username = "carlos@connecting-company"
-    const password = "carloscarlos123"
-    const pointOfSaleName = "3bd.02@connecting-company"
-    const start = +new Date()
-    console.log(`Creating new access code with username=${username} password=${password.replaceAll(/./g, '*')} pointOfSaleName=${pointOfSaleName}`)
-    const cookieJar = await wispHub.login(username, password)
-    const plans = await wispHub.getPlans(pointOfSaleName)
-    console.log(plans);
-    const now = new Date();
-    const [currentMonth, currentYear] = [now.getMonth(), now.getFullYear()]
-    const beginningOfTheMonth = new Date(currentYear, currentMonth, 1);
-    const toDate = new Date(beginningOfTheMonth); toDate.setMonth(beginningOfTheMonth.getMonth() + 1)
-    const a = await wispHub.getPlanGeneratedAccessCodes(pointOfSaleName,
-        beginningOfTheMonth, toDate, false, cookieJar);
-    console.log(a);
-    // try {
-    //     const plans = await wispHub.refreshPlans(username, cookieJar);
-    // } catch (e) {
-    //     console.log(e)
-    // }
-
-    // const plans = await wispHub.getPlans(username, deviceId, pointOfSaleName, cookieJar);
-    // const selectedPlan = Object.values(plans)[3];
-    // console.log(`selectedPlan=${JSON.stringify(selectedPlan)}`)
-    // const newAccessCode = await wispHub.createAccessCode(username, deviceId, selectedPlan, cookieJar)
-    // console.log(`newAccessCode=${newAccessCode}`);
-    // console.log(`time=${+new Date() - start}ms`)
-
-}
-
-// test()

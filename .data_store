@@ -8,6 +8,24 @@
             "password": "uCYjfr7ktPPM2jaqQstwWwXF"
         }
     },
+    "3bd.08@connecting-company-user": {
+        "password": "sha1$3c9f1ac4$1$f2e293c985e24dd4c23ba848c9caba274ad99c0e",
+        "pointOfSaleFriendlyName": "San Isidro",
+        "wispHub": {
+            "pointOfSaleName": "3bd.08@connecting-company",
+            "username": "pos-admin@connecting-company",
+            "password": "uCYjfr7ktPPM2jaqQstwWwXF"
+        }
+    },
+    "3bd.05@connecting-company-user": {
+        "password": "sha1$f3856961$1$6750de5336b66405eb931d54168c41d422f10e8e",
+        "pointOfSaleFriendlyName": "La Esmeralda",
+        "wispHub": {
+            "pointOfSaleName": "3bd.05@connecting-company",
+            "username": "pos-admin@connecting-company",
+            "password": "uCYjfr7ktPPM2jaqQstwWwXF"
+        }
+    },
     "WISP_HUB_PLANS": {
         "4744": {
             "id": "4744",
