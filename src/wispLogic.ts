@@ -212,6 +212,7 @@ export class WispHubWispLogic implements IWispLogic {
         const plans = this.keyValueStorage.read<Plans>(this.plansKey);
         const filteredEntries = Object.entries(plans).filter((entry) => {
             return entry[1].pointOfSale.findIndex(pos => pos.name === pointOfSaleName) >= 0
+            && parseFloat(entry[1].price) > 0
         })
         return Object.fromEntries(filteredEntries)
     }
