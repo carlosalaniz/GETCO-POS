@@ -5,7 +5,7 @@
         "wispHub": {
             "pointOfSaleName": "3bd.02@connecting-company",
             "username": "pos-admin@connecting-company",
-            "password": "uCYjfr7ktPPM2jaqQstwWwXF"
+            "password": "uCYjfr7ktPPM2jaq@QstwWwXF"
         }
     },
     "3bd.08@connecting-company-user": {
@@ -14,7 +14,7 @@
         "wispHub": {
             "pointOfSaleName": "3bd.08@connecting-company",
             "username": "pos-admin@connecting-company",
-            "password": "uCYjfr7ktPPM2jaqQstwWwXF"
+            "password": "uCYjfr7ktPPM2jaq@QstwWwXF"
         }
     },
     "3bd.05@connecting-company-user": {
@@ -23,7 +23,7 @@
         "wispHub": {
             "pointOfSaleName": "3bd.05@connecting-company",
             "username": "pos-admin@connecting-company",
-            "password": "uCYjfr7ktPPM2jaqQstwWwXF"
+            "password": "uCYjfr7ktPPM2jaq@QstwWwXF"
         }
     },
     "WISP_HUB_PLANS": {
