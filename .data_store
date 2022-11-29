@@ -17,6 +17,15 @@
             "password": "uCYjfr7ktPPM2jaq@QstwWwXF"
         }
     },
+    "64.22@connecting-company-user": {
+        "password": "sha1$e5dc1f81$1$bd87eb5d577cc8a1caac42a096a493ac15d1b9e1",
+        "pointOfSaleFriendlyName": "Cabo Pulmo",
+        "wispHub": {
+            "pointOfSaleName": "64.22@connecting-company",
+            "username": "pos-admin@connecting-company",
+            "password": "uCYjfr7ktPPM2jaq@QstwWwXF"
+        }
+    },
     "3bd.05@connecting-company-user": {
         "password": "sha1$f3856961$1$6750de5336b66405eb931d54168c41d422f10e8e",
         "pointOfSaleFriendlyName": "La Esmeralda",
