@@ -35,6 +35,24 @@
             "password": "uCYjfr7ktPPM2jaq@QstwWwXF"
         }
     },
+    "romelia@coco-user": {
+        "password": "sha1$551cd193$1$2ed4fa409f23712f63448cb69bcbab0865271c40",
+        "pointOfSaleFriendlyName": "San Juanico - Romelia",
+        "wispHub": {
+            "pointOfSaleName": "64.21@connecting-company",
+            "username": "pos-admin@connecting-company",
+            "password": "uCYjfr7ktPPM2jaq@QstwWwXF"
+        }
+    },
+    "bertha@coco-user": {
+        "password": "sha1$05d0ee19$1$bcd157c5dad7d8c5294f3093b73601187c06ef4e",
+        "pointOfSaleFriendlyName": "San Juanico - Bertha",
+        "wispHub": {
+            "pointOfSaleName": "64.23@connecting-company",
+            "username": "pos-admin@connecting-company",
+            "password": "uCYjfr7ktPPM2jaq@QstwWwXF"
+        }
+    },
     "WISP_HUB_PLANS": {
         "4744": {
             "id": "4744",
@@ -3754,18 +3772,163 @@
             "price": "0.00",
             "currency": "MXN",
             "router": "64.21-SanJuanico"
+        },
+        "6608": {
+            "id": "6608",
+            "routerShortName": "64.20-R-IncluidoIlu",
+            "pointOfSale": [
+                {
+                    "id": 585669,
+                    "name": "ahinojosa@connecting-company"
+                },
+                {
+                    "id": 943809,
+                    "name": "64.20@connecting-company"
+                },
+                {
+                    "id": 944619,
+                    "name": "64.22@connecting-company"
+                }
+            ],
+            "name": "Prefijo: r6",
+            "prefix": "hotspot1",
+            "plan": "64.20-R-IncluidoIlu",
+            "planLongName": "64.20-R-IncluidoIlu - Prefijo: r6 - Server: hotspot1",
+            "price": "0.00",
+            "currency": "MXN",
+            "router": "64.20-Cabo Pulmo"
         }
     },
     "pos-admin@connecting-company-cookies": {
         "csrftoken": {
-            "csrftoken": "ogNx6yJIJp3cgP8Bpj6hNh5PztvJsS3nfTeAGwULC5BB7xVd88ElmcEoLC1T5TsE",
-            "expires": "Sat, 14-Oct-2023 17:09:54 GMT",
+            "csrftoken": "dv0HVPwfDvusXMjhoEY96yQbODAKrLCyAiv2waSat4XWpKmluphV4tMKdK4a7Op3",
+            "expires": "Fri, 01-Dec-2023 15:55:14 GMT",
             "Max-Age": "31449600",
             "Path": "/"
         },
         "sessionid": {
-            "sessionid": "lzsl7w2gpj1l04t0y7ol290kiv8lraoe",
-            "expires": "Sat, 29-Oct-2022 17:09:54 GMT",
+            "sessionid": "98d57zilz8jm33s4tdg1im34r30yw0x8",
+            "expires": "Fri, 16-Dec-2022 15:55:14 GMT",
+            "Max-Age": "1209600",
+            "Path": "/"
+        },
+        "messages": {
+            "messages": "",
+            "expires": "Thu, 01-Jan-1970 00:00:00 GMT",
+            "Max-Age": "0",
+            "Path": "/"
+        }
+    },
+    "3bd.05@connecting-company-cookies": {
+        "csrftoken": {
+            "csrftoken": "dv0HVPwfDvusXMjhoEY96yQbODAKrLCyAiv2waSat4XWpKmluphV4tMKdK4a7Op3",
+            "expires": "Fri, 01-Dec-2023 15:46:37 GMT",
+            "Max-Age": "31449600",
+            "Path": "/"
+        },
+        "sessionid": {
+            "sessionid": "98d57zilz8jm33s4tdg1im34r30yw0x8",
+            "expires": "Fri, 16-Dec-2022 15:44:10 GMT",
+            "Max-Age": "1209600",
+            "Path": "/"
+        },
+        "messages": {
+            "messages": "",
+            "expires": "Thu, 01-Jan-1970 00:00:00 GMT",
+            "Max-Age": "0",
+            "Path": "/"
+        }
+    },
+    "3bd.22@connecting-company-cookies": {
+        "csrftoken": {
+            "csrftoken": "dv0HVPwfDvusXMjhoEY96yQbODAKrLCyAiv2waSat4XWpKmluphV4tMKdK4a7Op3",
+            "expires": "Fri, 01-Dec-2023 15:46:50 GMT",
+            "Max-Age": "31449600",
+            "Path": "/"
+        },
+        "sessionid": {
+            "sessionid": "98d57zilz8jm33s4tdg1im34r30yw0x8",
+            "expires": "Fri, 16-Dec-2022 15:44:10 GMT",
+            "Max-Age": "1209600",
+            "Path": "/"
+        },
+        "messages": {
+            "messages": "",
+            "expires": "Thu, 01-Jan-1970 00:00:00 GMT",
+            "Max-Age": "0",
+            "Path": "/"
+        }
+    },
+    "3bd.23@connecting-company-cookies": {
+        "csrftoken": {
+            "csrftoken": "dv0HVPwfDvusXMjhoEY96yQbODAKrLCyAiv2waSat4XWpKmluphV4tMKdK4a7Op3",
+            "expires": "Fri, 01-Dec-2023 15:46:54 GMT",
+            "Max-Age": "31449600",
+            "Path": "/"
+        },
+        "sessionid": {
+            "sessionid": "98d57zilz8jm33s4tdg1im34r30yw0x8",
+            "expires": "Fri, 16-Dec-2022 15:44:10 GMT",
+            "Max-Age": "1209600",
+            "Path": "/"
+        },
+        "messages": {
+            "messages": "",
+            "expires": "Thu, 01-Jan-1970 00:00:00 GMT",
+            "Max-Age": "0",
+            "Path": "/"
+        }
+    },
+    "3bd.02@connecting-company-cookies": {
+        "csrftoken": {
+            "csrftoken": "dv0HVPwfDvusXMjhoEY96yQbODAKrLCyAiv2waSat4XWpKmluphV4tMKdK4a7Op3",
+            "expires": "Fri, 01-Dec-2023 15:46:30 GMT",
+            "Max-Age": "31449600",
+            "Path": "/"
+        },
+        "sessionid": {
+            "sessionid": "98d57zilz8jm33s4tdg1im34r30yw0x8",
+            "expires": "Fri, 16-Dec-2022 15:44:10 GMT",
+            "Max-Age": "1209600",
+            "Path": "/"
+        },
+        "messages": {
+            "messages": "",
+            "expires": "Thu, 01-Jan-1970 00:00:00 GMT",
+            "Max-Age": "0",
+            "Path": "/"
+        }
+    },
+    "3bd.08@connecting-company-cookies": {
+        "csrftoken": {
+            "csrftoken": "dv0HVPwfDvusXMjhoEY96yQbODAKrLCyAiv2waSat4XWpKmluphV4tMKdK4a7Op3",
+            "expires": "Fri, 01-Dec-2023 15:46:42 GMT",
+            "Max-Age": "31449600",
+            "Path": "/"
+        },
+        "sessionid": {
+            "sessionid": "98d57zilz8jm33s4tdg1im34r30yw0x8",
+            "expires": "Fri, 16-Dec-2022 15:44:10 GMT",
+            "Max-Age": "1209600",
+            "Path": "/"
+        },
+        "messages": {
+            "messages": "",
+            "expires": "Thu, 01-Jan-1970 00:00:00 GMT",
+            "Max-Age": "0",
+            "Path": "/"
+        }
+    },
+    "3bd.21@connecting-company-cookies": {
+        "csrftoken": {
+            "csrftoken": "dv0HVPwfDvusXMjhoEY96yQbODAKrLCyAiv2waSat4XWpKmluphV4tMKdK4a7Op3",
+            "expires": "Fri, 01-Dec-2023 15:46:46 GMT",
+            "Max-Age": "31449600",
+            "Path": "/"
+        },
+        "sessionid": {
+            "sessionid": "98d57zilz8jm33s4tdg1im34r30yw0x8",
+            "expires": "Fri, 16-Dec-2022 15:44:10 GMT",
             "Max-Age": "1209600",
             "Path": "/"
         },
