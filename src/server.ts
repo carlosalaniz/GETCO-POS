@@ -9,6 +9,7 @@ import { FileKeyValueStorage } from './storage';
 import * as jwt from 'jsonwebtoken';
 import { expressjwt, Request as JWTRequest } from "express-jwt";
 import { CookieJar, Plan, WispHubWispLogic } from './wispLogic';
+import * as xl from 'excel4node';
 
 //types
 type User = {
@@ -71,6 +72,69 @@ app.post("/login", async (req: LoginRequest, res: express.Response) => {
     } else {
         return res.sendStatus(401)
     }
+})
+
+app.get('/corte', async (req: JWTRequest, res: express.Response) => {
+    const adminCookieJar = await wispHubLogic.login(
+        "pos-admin@connecting-company", "uCYjfr7ktPPM2jaq@QstwWwXF"
+    )
+
+    const store = Object.entries(storage.dataStore)
+    const [month, year] = [+req.query.month, +req.query.year]
+
+    const fromDate = new Date(year, month, 1);
+    fromDate.setHours(0, 0, 0, 0)
+    const toDate = new Date(fromDate);
+    toDate.setMonth(month + 1);
+    const corte = await Promise.all(store.filter(o => /-user/.test(o[0]))
+        .map(async (a: any) => {
+            const monthlyAccessCodes = await wispHubLogic.getPlanGeneratedAccessCodes(
+                a[1].wispHub.pointOfSaleName,
+                fromDate,
+                toDate,
+                true,
+                adminCookieJar
+            )
+            return { name: a[1].wispHub.pointOfSaleName, monthlyAccessCodes };
+        }));
+    const table = corte
+        .map(pos => {
+            const rows = [
+                ['id', 'plan', 'precio', 'moneda', 'ventas totales', 'total']
+            ]
+            const sales = Object.entries(pos.monthlyAccessCodes.data as { [k: number]: any })
+                .filter(([id, data]) => data.recordsTotal > 0)
+                .map(
+                    ([id, data]) => {
+                        return [
+                            data.plan.id,
+                            data.plan.name,
+                            data.plan.price,
+                            data.plan.currency,
+                            data.recordsTotal,
+                            (data.recordsTotal * data.plan.price).toFixed(2)
+                        ]
+                    }
+                )
+            rows.push(...sales)
+            rows.push([null, null, null, null, null, sales.reduce((acc, r) => acc + (+r[5]), 0).toFixed(2)])
+            return { pos: pos.name, rows }
+        })
+    var wb = new xl.Workbook();
+    table.forEach(t => {
+        var ws = wb.addWorksheet(t.pos);
+        t.rows.forEach((r, rowId) => {
+            r.forEach((c, colId) => {
+                var cell = ws.cell(rowId + 1, colId + 1);
+                if (c)
+                    if (rowId > 0 && colId === 5)
+                        cell.number(+c)
+                    else
+                        cell.string(c.toString())
+            })
+        })
+    })
+    wb.write(`${fromDate.toLocaleString()}${toDate.toLocaleString()}.xlsx`, res);
 })
 
 app.get('/plans',
