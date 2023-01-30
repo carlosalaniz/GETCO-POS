@@ -41,13 +41,18 @@
       <div class="modal" v-if="this.modal.show">
         <div>
           <h3>{{this.modal.title}}</h3>
-          <a href="#" class="modal-close" @click="this.modal.show = false">X</a>
+          <a
+            href="#"
+            class="modal-close"
+            @click="this.modal.show = false; this.modal.onClose && this.modal.onClose()"
+            >X</a
+          >
         </div>
         <hr />
         <div class="content" v-html="this.modal.html"></div>
         <button
           class="confirm-button"
-          @click="this.modal.show = false"
+          @click="this.modal.show = false; this.modal.onConfirm && this.modal.onConfirm(); this.modal.onClose && this.modal.onClose()"
           v-if="this.modal.confirm"
         >
           OK
@@ -137,7 +142,17 @@
               {{ plan.name }} - ${{plan.price}} {{plan.currency}}
             </option>
           </select>
-          <button @click="createAccessCode()">Crear ficha</button>
+          <button
+            @click="showModal(
+            'Confirmar creación de ficha',
+            'Estas seguro que deseas crear una ficha?',
+            true,
+            ()=>createAccessCode()
+          );
+          "
+          >
+            Crear ficha
+          </button>
         </div>
 
         <div
@@ -249,6 +264,8 @@
               html: `<div class="ficha"><p>3x1ggm<br><span id="access-code-qr"></span></p></div>`,
               title: "Ficha creada",
               confirm: true,
+              onConfirm: null,
+              onClose: null,
             },
 
             loadingScreen: false,
@@ -269,11 +286,13 @@
             return monthText[monthNo];
           },
 
-          showModal(title, html, confirm) {
+          showModal(title, html, confirm, onConfirm, onClose) {
             this.modal.title = title;
             this.modal.html = html;
             this.modal.confirm = confirm;
             this.modal.show = true;
+            this.modal.onConfirm = onConfirm;
+            this.modal.onClose = onClose;
           },
 
           async login() {
